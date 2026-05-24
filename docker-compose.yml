@@ -20,6 +20,11 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - agent-network
+    deploy:
+      resources:
+        limits:
+          memory: ${TRAEFIK_MEMORY_LIMIT:-128m}
+          cpus: '${TRAEFIK_CPU_LIMIT:-0.5}'
 
   postgres:
     image: postgres:16
@@ -37,6 +42,11 @@ services:
       retries: 5
     networks:
       - agent-network
+    deploy:
+      resources:
+        limits:
+          memory: ${POSTGRES_MEMORY_LIMIT:-512m}
+          cpus: '${POSTGRES_CPU_LIMIT:-1}'
 
   redis:
     image: redis:7-alpine
@@ -46,8 +56,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    volumes:
+      - redis_data:/data
     networks:
       - agent-network
+    deploy:
+      resources:
+        limits:
+          memory: ${REDIS_MEMORY_LIMIT:-128m}
+          cpus: '${REDIS_CPU_LIMIT:-0.5}'
 
   n8n:
     image: n8nio/n8n:1.94.1
@@ -90,6 +107,11 @@ services:
         condition: service_healthy
     networks:
       - agent-network
+    deploy:
+      resources:
+        limits:
+          memory: ${N8N_MEMORY_LIMIT:-1g}
+          cpus: '${N8N_CPU_LIMIT:-1}'
 
   n8n-worker:
     image: n8nio/n8n:1.94.1
@@ -106,6 +128,12 @@ services:
       - QUEUE_BULL_REDIS_HOST=redis
       - QUEUE_BULL_REDIS_PORT=6379
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep 'n8n worker' | grep -v grep || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     depends_on:
       n8n:
         condition: service_healthy
@@ -115,6 +143,10 @@ services:
       - agent-network
     deploy:
       replicas: ${N8N_WORKER_COUNT:-1}
+      resources:
+        limits:
+          memory: ${N8N_WORKER_MEMORY_LIMIT:-512m}
+          cpus: '${N8N_WORKER_CPU_LIMIT:-1}'
 
   watchtower:
     image: containrrr/watchtower
@@ -126,6 +158,11 @@ services:
       - WATCHTOWER_MONITOR_ONLY=true
       - WATCHTOWER_SCHEDULE=0 0 8 * * *
       - WATCHTOWER_NOTIFICATION_URL=${WATCHTOWER_NOTIFICATION_URL}
+    deploy:
+      resources:
+        limits:
+          memory: ${WATCHTOWER_MEMORY_LIMIT:-64m}
+          cpus: '${WATCHTOWER_CPU_LIMIT:-0.5}'
 
 networks:
   agent-network:
@@ -134,3 +171,4 @@ volumes:
   traefik_data:
   pgdata:
   n8n_data:
+  redis_data:
