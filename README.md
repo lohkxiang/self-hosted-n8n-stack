@@ -1,6 +1,7 @@
 # Self-Hosted n8n Stack
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![GitHub release](https://img.shields.io/github/v/release/lohkxiang/self-hosted-n8n-stack)](https://github.com/lohkxiang/self-hosted-n8n-stack/releases/latest)
 
 Build and host your own AI agent — no execution limits, no vendor lock-in.
 
